@@ -1,0 +1,8 @@
+# Keep Linux deploy scripts/config as LF regardless of the OS they're edited on.
+* text=auto
+*.sh text eol=lf
+deploy/nginx.conf text eol=lf
+deploy/secret-chat.service text eol=lf
+deploy/env.prod.example text eol=lf
+# Windows helper stays CRLF
+*.ps1 text eol=crlf
