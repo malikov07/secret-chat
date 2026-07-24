@@ -1,0 +1,15 @@
+Django>=5.1,<5.2
+djangorestframework>=3.15
+djangorestframework-simplejwt>=5.3
+channels>=4.1
+channels-redis>=4.2
+daphne>=4.1
+django-cors-headers>=4.6
+psycopg[binary]>=3.2
+Pillow>=11.0
+python-dotenv>=1.0
+# --- production / Heroku ---
+dj-database-url>=2.2
+whitenoise>=6.7
+cloudinary>=1.40
+django-cloudinary-storage>=0.3
