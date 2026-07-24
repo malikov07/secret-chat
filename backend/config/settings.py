@@ -85,7 +85,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-# On Heroku, DATABASE_URL is provided by the Postgres add-on and wins.
+# If DATABASE_URL is set (e.g. a managed Postgres service), it wins.
 # Otherwise: DB_ENGINE=sqlite gives a zero-config local DB; default is local Postgres.
 if os.environ.get("DATABASE_URL"):
     import dj_database_url

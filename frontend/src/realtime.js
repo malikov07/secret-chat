@@ -18,7 +18,7 @@ export function openSocket(path, onEvent) {
     ws.onopen = () => {
       retry = 0
       onEvent?.({ event: '_open' })
-      // Keep the connection alive (Heroku drops idle WebSockets after ~55s).
+      // Keep the connection alive (some proxies drop idle WebSockets).
       clearInterval(heartbeat)
       heartbeat = setInterval(() => {
         if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ action: 'ping' }))
