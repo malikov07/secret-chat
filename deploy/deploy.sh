@@ -17,7 +17,9 @@ cd backend
 
 echo "==> Building frontend"
 cd ../frontend
-npm ci
+# npm install (not ci) so a lock file generated on another OS still resolves
+# platform-specific optional deps.
+npm install --no-audit --no-fund
 npm run build
 
 echo "==> collectstatic + migrate"
