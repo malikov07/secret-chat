@@ -27,7 +27,7 @@ def env_list(key, default=""):
 
 SECRET_KEY = env("SECRET_KEY", "dev-insecure-change-me")
 DEBUG = env_bool("DEBUG", True)
-ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1") + [".herokuapp.com"]
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
 
 # Path to the built React app (produced by `npm run build` in frontend/)
 FRONTEND_DIST = BASE_DIR.parent / "frontend" / "dist"
@@ -45,9 +45,6 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "channels",
-    # media storage (Cloudinary) — active when CLOUDINARY_URL is set
-    "cloudinary_storage",
-    "cloudinary",
     # local
     "accounts",
     "chat",
@@ -134,26 +131,28 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [FRONTEND_DIST] if FRONTEND_DIST.exists() else []
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+# Media is stored on the server's local disk (persistent on a VM). Override the
+# location with MEDIA_ROOT in .env (e.g. /var/secret-chat/media) if you like.
+MEDIA_ROOT = env("MEDIA_ROOT") or (BASE_DIR / "media")
 
-# Static via WhiteNoise; media via Cloudinary when configured, else local disk (dev).
+# Static served by WhiteNoise (and/or nginx in production); media on local disk.
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
 }
-if os.environ.get("CLOUDINARY_URL"):
-    # RawMediaCloudinaryStorage stores any file type (image/video/audio) uniformly.
-    STORAGES["default"] = {"BACKEND": "cloudinary_storage.storage.RawMediaCloudinaryStorage"}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # --- Production security (only when DEBUG is off) ---
 if not DEBUG:
+    # nginx terminates TLS and forwards the original scheme in this header.
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", True)
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    CSRF_TRUSTED_ORIGINS = ["https://*.herokuapp.com"] + env_list("CSRF_TRUSTED_ORIGINS")
+    CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
+    # Enable once HTTPS is set up (e.g. certbot): set USE_HTTPS=True in .env
+    if env_bool("USE_HTTPS", False):
+        SECURE_SSL_REDIRECT = True
+        SESSION_COOKIE_SECURE = True
+        CSRF_COOKIE_SECURE = True
 
 # Uploads: allow large media (videos)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50 MB
