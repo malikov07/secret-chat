@@ -47,7 +47,7 @@ export default function AppShell() {
   const go = (key) => { setTab(key); setDrawer(false) }
 
   return (
-    <div className="shell">
+    <div className={`shell ${showDock ? 'live' : ''}`}>
       <button className="hamburger" onClick={() => setDrawer(true)} aria-label="Menu"><MenuIcon /></button>
       {drawer && <div className="drawer-scrim" onClick={() => setDrawer(false)} />}
 

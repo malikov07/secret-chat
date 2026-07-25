@@ -268,6 +268,9 @@
 .dock-body { flex: 1; position: relative; min-height: 0; }
 .dock-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--danger); font-weight: 700; }
 .dock-badge .rec { width: 9px; height: 9px; border-radius: 50%; background: var(--danger); animation: beat 1s infinite; }
+/* Minimize button + picture-in-picture controls: mobile-only (desktop has room for the side dock) */
+.dock-min { display: none; }
+.pip-controls { display: none; }
 
 /* ---------- Detail modal extras ---------- */
 .detail-media { width: 100%; border-radius: 12px; max-height: 300px; object-fit: cover; margin-bottom: 12px; cursor: zoom-in; }
@@ -365,6 +368,39 @@
   .settings-card { padding: 16px; }
   .emoji-pop { left: 8px; right: 8px; width: auto; }
   .modal { padding: 20px; }
-  /* No room for a side dock on a phone — show the live view full-screen */
-  .live-dock { display: flex; position: fixed; inset: 0; width: 100%; max-width: none; min-width: 0; z-index: 150; }
+
+  /* ---- Live on a phone: camera on top, chat below (both usable at once) ---- */
+  .shell.live { display: flex; flex-direction: column; }
+  .shell.live .main { flex: 1; height: auto; min-height: 0; }
+  .shell.live .chat-header { padding-left: 14px; } /* hamburger now sits over the camera, not the header */
+
+  .live-dock {
+    order: -1;                 /* camera above the chat */
+    position: relative; inset: auto;
+    width: 100%; max-width: none; min-width: 0;
+    height: 42vh; height: 42dvh; flex: none;
+    border-left: none; border-bottom: 1px solid var(--divider);
+    z-index: auto;
+  }
+  .shell.live .dock-head { padding-left: 56px; } /* clear the fixed hamburger */
+  .dock-min { display: grid; }
+
+  /* Minimized → floating picture-in-picture in the corner, chat gets full height */
+  .live-dock.min {
+    order: 0; position: fixed; right: 10px; bottom: 88px;
+    width: 34vw; max-width: 150px; height: auto; min-width: 0;
+    border: 1px solid var(--divider); border-radius: 16px; overflow: hidden;
+    box-shadow: var(--shadow); z-index: 155;
+  }
+  .live-dock.min .dock-head { display: none; }
+  .live-dock.min .dock-body { height: 118px; }
+  .live-dock.min .watch-video { object-fit: cover; }
+  .live-dock.min .pip-controls {
+    display: flex; gap: 6px; position: absolute; top: 6px; right: 6px; z-index: 2;
+  }
+  .pip-controls button {
+    width: 26px; height: 26px; border-radius: 50%; font-size: 13px;
+    background: rgba(0,0,0,.55); color: #fff; display: grid; place-items: center;
+  }
+  .pip-controls .pip-end { background: var(--danger); }
 }
