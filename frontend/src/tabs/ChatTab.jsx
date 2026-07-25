@@ -41,6 +41,7 @@ export default function ChatTab() {
   const [typing, setTyping] = useState(false)
   const [recording, setRecording] = useState(false)
   const [vnote, setVnote] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
 
   const sockRef = useRef(null)
   const bottomRef = useRef(null)
@@ -164,7 +165,8 @@ export default function ChatTab() {
   return (
     <div className="chat">
       <div className="chat-header">
-        <div className="chat-peer">
+        <div className="chat-peer" onClick={() => setShowProfile(true)} title="View profile"
+             style={{ cursor: 'pointer' }}>
           <Avatar user={partner} size={44} showDot />
           <div>
             <div className="name">{partner.name || partner.display_name || partner.phone}</div>
@@ -214,7 +216,7 @@ export default function ChatTab() {
         <button className="icon-btn" onClick={() => setShowEmoji((s) => !s)}>😊</button>
         <button className="icon-btn" onClick={() => fileRef.current?.click()}>📎</button>
         <button className="icon-btn" onClick={() => setVnote(true)} title="Circle video message">🎥</button>
-        <input ref={fileRef} type="file" hidden accept="image/*,video/*,*"
+        <input ref={fileRef} type="file" hidden accept="image/*,video/*"
                onChange={(e) => { sendFile(e.target.files[0]); e.target.value = '' }} />
         <textarea rows={1} value={text} onChange={onType} placeholder="Message…"
                   onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText() } }} />
@@ -225,6 +227,7 @@ export default function ChatTab() {
       </div>
 
       {vnote && <VideoNoteRecorder onClose={() => setVnote(false)} onSend={sendVideoNote} />}
+      {showProfile && <ProfilePanel user={partner} onClose={() => setShowProfile(false)} />}
     </div>
   )
 }
@@ -237,25 +240,28 @@ function MessageBubble({ m, out, onReply, onReact, onDelete, onEdit }) {
   const [draft, setDraft] = useState(m.text)
 
   if (m.is_deleted) return null
-  if (m.type === 'video_note' && m.media_url) {
-    return (
-      <div className={`msg-row ${out ? 'out' : 'in'}`}>
-        <div>
-          <VideoNote src={m.media_url} />
-          <div className="bubble-meta" style={{ justifyContent: out ? 'flex-end' : 'flex-start', marginTop: 4 }}>
-            <span>{time(m.created_at)}</span>
-            {out && <span className={`ticks ${m.is_read ? 'read' : ''}`}>{m.is_read ? '✓✓' : '✓'}</span>}
-          </div>
-        </div>
-      </div>
-    )
-  }
   const emojiOnly = m.type === 'text' && isEmojiOnly(m.text)
   const canEdit = out && m.type === 'text'
-
   const saveEdit = () => { onEdit(m, draft); setEditing(false) }
 
+  if (m.type === 'video_note' && m.media_url) {
+    return (
+      <SwipeToReply onReply={() => onReply(m)}>
+        <div className={`msg-row ${out ? 'out' : 'in'}`}>
+          <div>
+            <VideoNote src={m.media_url} />
+            <div className="bubble-meta" style={{ justifyContent: out ? 'flex-end' : 'flex-start', marginTop: 4 }}>
+              <span>{time(m.created_at)}</span>
+              {out && <span className={`ticks ${m.is_read ? 'read' : ''}`}>{m.is_read ? '✓✓' : '✓'}</span>}
+            </div>
+          </div>
+        </div>
+      </SwipeToReply>
+    )
+  }
+
   return (
+    <SwipeToReply onReply={() => onReply(m)}>
     <div className={`msg-row ${out ? 'out' : 'in'}`}>
       <div className={`bubble ${emojiOnly ? 'emoji-only' : ''}`} onDoubleClick={() => onReact(m, '❤️')}>
         {!editing && (
@@ -309,6 +315,84 @@ function MessageBubble({ m, out, onReply, onReact, onDelete, onEdit }) {
           {out && <span className={`ticks ${m.is_read ? 'read' : ''}`}>{m.is_read ? '✓✓' : '✓'}</span>}
         </div>
         {m.reaction && <div className="reaction-badge" onClick={() => onReact(m, m.reaction)}>{m.reaction}</div>}
+      </div>
+    </div>
+    </SwipeToReply>
+  )
+}
+
+// Swipe a message left to reply to it (Telegram-style). Touch only.
+function SwipeToReply({ onReply, children }) {
+  const [dx, setDx] = useState(0)
+  const start = useRef(null)
+  const cur = useRef(0)
+  const active = useRef(false)
+
+  const onTouchStart = (e) => {
+    const t = e.touches[0]
+    start.current = { x: t.clientX, y: t.clientY }
+    active.current = false
+  }
+  const onTouchMove = (e) => {
+    if (!start.current) return
+    const t = e.touches[0]
+    const dX = t.clientX - start.current.x
+    const dY = t.clientY - start.current.y
+    if (!active.current) {
+      if (Math.abs(dX) > 10 && Math.abs(dX) > Math.abs(dY)) active.current = true
+      else if (Math.abs(dY) > 10) { start.current = null; return }  // vertical scroll — let it be
+      else return
+    }
+    const d = Math.max(-96, Math.min(0, dX))  // left-swipe only
+    cur.current = d
+    setDx(d)
+  }
+  const onTouchEnd = () => {
+    if (cur.current <= -56) onReply()
+    start.current = null; active.current = false; cur.current = 0
+    setDx(0)
+  }
+
+  return (
+    <div className="swipe-wrap" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+      <div className={`swipe-hint ${dx <= -56 ? 'armed' : ''}`} style={{ opacity: Math.min(1, -dx / 56) }}>↩</div>
+      <div style={{ transform: dx ? `translateX(${dx}px)` : undefined, transition: dx ? 'none' : 'transform .18s ease' }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// Telegram-style contact profile: big avatar, name, presence, and info rows.
+function ProfilePanel({ user, onClose }) {
+  const initial = (user?.display_name || user?.name || user?.phone || '?').trim().charAt(0).toUpperCase()
+  return (
+    <div className="profile-scrim" onClick={onClose}>
+      <div className="profile-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="profile-top">
+          <button className="icon-btn profile-close" onClick={onClose} title="Close">✕</button>
+          <div className="profile-avatar">
+            {user?.avatar ? <img src={user.avatar} alt="" /> : <span>{initial}</span>}
+          </div>
+          <div className="profile-name">{user.name || user.display_name || user.phone}</div>
+          <div className={`profile-status ${user.is_online ? 'online' : ''}`}>{lastSeenText(user)}</div>
+        </div>
+        <div className="profile-list">
+          <div className="profile-item">
+            <span className="pi-icon">📞</span>
+            <div className="pi-body">
+              <div className="pi-value">{user.phone}</div>
+              <div className="pi-label">Phone</div>
+            </div>
+          </div>
+          <div className="profile-item">
+            <span className="pi-icon">💞</span>
+            <div className="pi-body">
+              <div className="pi-value">Partner</div>
+              <div className="pi-label">Your one and only</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

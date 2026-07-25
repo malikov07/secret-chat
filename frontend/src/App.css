@@ -292,6 +292,40 @@
 .vnote-controls { display: flex; gap: 16px; align-items: center; justify-content: center; margin-top: 18px; }
 .rec-btn { width: 66px; height: 66px; border-radius: 50%; background: var(--danger); display: grid; place-items: center; color: #fff; font-size: 22px; box-shadow: 0 6px 20px rgba(255,60,60,.5); }
 
+/* ---------- Swipe-to-reply ---------- */
+.swipe-wrap { position: relative; touch-action: pan-y; }
+.swipe-hint {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--bg-3); color: var(--accent); font-size: 16px; opacity: 0;
+  pointer-events: none; transition: background .12s;
+}
+.swipe-hint.armed { background: var(--accent-grad); color: #fff; }
+
+/* ---------- Contact profile (Telegram-style) ---------- */
+.profile-scrim { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 40;
+  display: flex; justify-content: flex-end; animation: fade .2s ease; }
+.profile-panel { width: 380px; max-width: 100%; height: 100%; background: var(--bg-2);
+  overflow-y: auto; box-shadow: var(--shadow); animation: profileIn .22s ease; }
+@keyframes profileIn { from { transform: translateX(24px); opacity: .5 } to { transform: none; opacity: 1 } }
+.profile-top { position: relative; background: var(--accent-grad); padding: 48px 20px 26px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.profile-close { position: absolute; top: 10px; left: 8px; color: #fff; }
+.profile-close:hover { background: rgba(255,255,255,.18); }
+.profile-avatar { width: 128px; height: 128px; border-radius: 50%; overflow: hidden;
+  background: rgba(255,255,255,.2); display: grid; place-items: center; font-size: 54px;
+  font-weight: 600; color: #fff; border: 3px solid rgba(255,255,255,.4); }
+.profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.profile-name { font-size: 22px; font-weight: 700; color: #fff; margin-top: 10px; text-align: center; }
+.profile-status { font-size: 14px; color: rgba(255,255,255,.85); }
+.profile-status.online { color: #eaffef; }
+.profile-list { padding: 8px 0; }
+.profile-item { display: flex; align-items: center; gap: 16px; padding: 12px 22px; }
+.profile-item:hover { background: var(--panel-hover); }
+.pi-icon { font-size: 20px; width: 24px; text-align: center; flex: none; }
+.pi-value { font-size: 15px; color: var(--text); }
+.pi-label { font-size: 13px; color: var(--text-dim); }
+
 /* ---------- Responsive (kept last so it overrides base rules) ---------- */
 @media (max-width: 720px) {
   .shell { display: block; }
