@@ -4,10 +4,50 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Secret · for two hearts</title>
+
+    <!-- Primary SEO -->
+    <title>ao33 — a private chat for two</title>
+    <meta name="description" content="ao33 is a private space for two — chat in real time, share photos & videos, and save your memories and dreams together." />
+    <meta name="application-name" content="ao33" />
+    <meta name="theme-color" content="#e26a8d" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://ao33.uz/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ao33" />
+    <meta property="og:title" content="ao33 — a private chat for two" />
+    <meta property="og:description" content="A private space for two — chat, share photos & videos, and save your memories and dreams together." />
+    <meta property="og:url" content="https://ao33.uz/" />
+    <meta property="og:image" content="https://ao33.uz/favicon.svg" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="ao33 — a private chat for two" />
+    <meta name="twitter:description" content="A private space for two — chat, share photos & videos, and save your memories and dreams together." />
+    <meta name="twitter:image" content="https://ao33.uz/favicon.svg" />
+
+    <!-- Structured data: helps Google show the brand name "ao33" -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "ao33",
+        "alternateName": "ao33.uz",
+        "url": "https://ao33.uz/"
+      }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Fallback content for crawlers / no-JS. React replaces this on mount. -->
+      <noscript>
+        <h1>ao33</h1>
+        <p>ao33 is a private space for two — chat in real time, share photos and
+        videos, and save your memories and dreams together. Open ao33.uz to log
+        in or create your account.</p>
+      </noscript>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

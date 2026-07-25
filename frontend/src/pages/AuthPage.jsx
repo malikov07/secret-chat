@@ -27,7 +27,7 @@ export default function AuthPage() {
     <div className="auth-wrap">
       <div className="auth-card">
         <div className="auth-logo">💌</div>
-        <div className="auth-title">Secret</div>
+        <h1 className="auth-title">ao33</h1>
         <div className="auth-sub">
           {mode === 'login' ? 'A private space for two hearts' : 'Create your private space'}
         </div>
