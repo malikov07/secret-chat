@@ -292,6 +292,10 @@
 .vnote-controls { display: flex; gap: 16px; align-items: center; justify-content: center; margin-top: 18px; }
 .rec-btn { width: 66px; height: 66px; border-radius: 50%; background: var(--danger); display: grid; place-items: center; color: #fff; font-size: 22px; box-shadow: 0 6px 20px rgba(255,60,60,.5); }
 
+/* ---------- Circle video message actions (react / reply / delete) ---------- */
+.vnote-msg { position: relative; width: fit-content; }
+.vnote-msg:hover .msg-actions { display: flex; }
+
 /* ---------- Swipe-to-reply ---------- */
 .swipe-wrap { position: relative; touch-action: pan-y; }
 .swipe-hint {

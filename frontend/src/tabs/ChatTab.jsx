@@ -248,12 +248,25 @@ function MessageBubble({ m, out, onReply, onReact, onDelete, onEdit }) {
     return (
       <SwipeToReply onReply={() => onReply(m)}>
         <div className={`msg-row ${out ? 'out' : 'in'}`}>
-          <div>
+          <div className="vnote-msg">
+            {!menuOpen && <button className="bubble-menu-btn" onClick={() => setMenuOpen(true)} title="More">⋯</button>}
+            {menuOpen && <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 4 }} />}
+            <div className={`msg-actions ${menuOpen ? 'open' : ''}`}>
+              <button onClick={() => setShowReacts((s) => !s)} title="React">😊</button>
+              <button onClick={() => { onReply(m); setMenuOpen(false) }} title="Reply">↩️</button>
+              {out && <button onClick={() => { onDelete(m); setMenuOpen(false) }} title="Delete">🗑️</button>}
+            </div>
+            {showReacts && (
+              <div className="msg-actions" style={{ top: -46, display: 'flex' }}>
+                {REACTIONS.map((r) => <button key={r} onClick={() => { onReact(m, r); setShowReacts(false) }}>{r}</button>)}
+              </div>
+            )}
             <VideoNote src={m.media_url} />
             <div className="bubble-meta" style={{ justifyContent: out ? 'flex-end' : 'flex-start', marginTop: 4 }}>
               <span>{time(m.created_at)}</span>
               {out && <span className={`ticks ${m.is_read ? 'read' : ''}`}>{m.is_read ? '✓✓' : '✓'}</span>}
             </div>
+            {m.reaction && <div className="reaction-badge" onClick={() => onReact(m, m.reaction)}>{m.reaction}</div>}
           </div>
         </div>
       </SwipeToReply>
